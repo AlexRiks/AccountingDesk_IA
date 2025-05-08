@@ -9,7 +9,7 @@ st.set_page_config(page_title="AccountingDesk IA Dashboard", layout="wide")
 st.title("AccountingDesk IA Dashboard")
 
 # -- Load connection URI from Streamlit secrets
-conn_uri = st.secrets["postgres"]["connection_uri"]
+conn_uri = st.secrets["postgres"]["CONNECTION_URI"]
 engine = create_engine(conn_uri)
 
 # -- Helper to load accounts
