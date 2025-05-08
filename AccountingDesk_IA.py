@@ -41,7 +41,8 @@ def load_institutions(entity):
     return ["All Banks"] + df["institution"].tolist()
 
 @st.cache_data
-def load_accounts(entity=None, institution=None):
+def load_accounts(entity, institution):
+    # Fetch matching accounts
     query = text(
         "SELECT id, name, masked_number "
         "FROM accounts "
@@ -51,8 +52,10 @@ def load_accounts(entity=None, institution=None):
     )
     df = pd.read_sql(query, engine, params={"ent": entity, "inst": institution})
     df["display"] = df["name"] + " (" + df["masked_number"] + ")"
-    return pd.DataFrame([{"id":None, "display":"All Accounts"}]) \
-           .append(df[["id","display"]], ignore_index=True)
+    # Prepend the "All Accounts" row
+    all_row = pd.DataFrame([{"id": None, "display": "All Accounts"}])
+    result = pd.concat([all_row, df[["id", "display"]]], ignore_index=True)
+    return result
 
 @st.cache_data
 def load_transactions(filters):
@@ -113,7 +116,9 @@ if mode == "Account":
     acct_df = load_accounts(filters["entity"], filters["institution"])
     selected_display = st.selectbox("Select account", acct_df["display"].tolist(), key="sel_acct")
     if selected_display != "All Accounts":
-        filters["account_id"] = int(acct_df.loc[acct_df["display"] == selected_display, "id"].iloc[0])
+        filters["account_id"] = int(
+            acct_df.loc[acct_df["display"] == selected_display, "id"].iloc[0]
+        )
     else:
         filters["account_id"] = None
 else:
@@ -125,7 +130,6 @@ st.subheader(f"Transactions ({mode})")
 st.dataframe(transactions_df, use_container_width=True)
 
 # ── Sidebar: Manage Accounts
-
 st.sidebar.header("Manage Accounts")
 with st.sidebar.expander("➕ Add account", expanded=False):
     with st.form("add_account", clear_on_submit=True):
@@ -165,8 +169,7 @@ if not full_df.empty:
         full_df["display"] = (
             full_df["entity"] + " | " +
             full_df["institution"] + " | " +
-            full_df["name"] + " (" +
-            full_df["masked_number"] + ")"
+            full_df["name"] + " (" + full_df["masked_number"] + ")"
         )
         to_delete = st.selectbox(
             "Select account to delete",
