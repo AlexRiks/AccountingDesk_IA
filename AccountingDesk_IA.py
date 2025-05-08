@@ -6,11 +6,11 @@ from sqlalchemy import create_engine, text
 st.set_page_config(page_title="AccountingDesk IA Dashboard", layout="wide")
 st.title("AccountingDesk IA Dashboard")
 
-# ── Database connection
+# ── DB connection
 conn_uri = st.secrets["postgres"]["connection_uri"]
 engine = create_engine(conn_uri)
 
-# ── Data loading functions
+# ── Data loaders
 
 @st.cache_data
 def load_entities():
@@ -32,25 +32,55 @@ def load_institutions(entity):
 @st.cache_data
 def load_accounts(entity, institution):
     df = pd.read_sql(
-        "SELECT id, name, masked_number FROM accounts WHERE entity = :ent AND institution = :inst ORDER BY name;",
+        "SELECT id, name, masked_number FROM accounts "
+        "WHERE entity = :ent AND institution = :inst "
+        "ORDER BY name;",
         engine,
         params={"ent": entity, "inst": institution}
     )
+    # prepare display "Name (####)"
+    df["display"] = df["name"] + " (" + df["masked_number"] + ")"
     return df
+
+@st.cache_data
+def load_transactions_by_entity(entity):
+    q = """
+        SELECT
+            t.id, t.date, t.description, t.amount, t.currency,
+            a.entity, a.institution,
+            c.name AS category, s.name AS subcategory
+        FROM transactions t
+        JOIN accounts a ON t.account_id = a.id
+        LEFT JOIN categories c ON t.category_id = c.id
+        LEFT JOIN subcategories s ON t.subcategory_id = s.id
+        WHERE a.entity = :ent
+        ORDER BY t.date DESC;
+    """
+    return pd.read_sql(text(q), engine, params={"ent": entity})
+
+@st.cache_data
+def load_transactions_by_institution(entity, institution):
+    q = """
+        SELECT
+            t.id, t.date, t.description, t.amount, t.currency,
+            a.entity, a.institution,
+            c.name AS category, s.name AS subcategory
+        FROM transactions t
+        JOIN accounts a ON t.account_id = a.id
+        LEFT JOIN categories c ON t.category_id = c.id
+        LEFT JOIN subcategories s ON t.subcategory_id = s.id
+        WHERE a.entity = :ent AND a.institution = :inst
+        ORDER BY t.date DESC;
+    """
+    return pd.read_sql(text(q), engine, params={"ent": entity, "inst": institution})
 
 @st.cache_data
 def load_transactions_by_account_id(account_id):
     q = """
         SELECT
-            t.id,
-            t.date,
-            t.description,
-            t.amount,
-            t.currency,
-            a.entity,
-            a.institution,
-            c.name AS category,
-            s.name AS subcategory
+            t.id, t.date, t.description, t.amount, t.currency,
+            a.entity, a.institution,
+            c.name AS category, s.name AS subcategory
         FROM transactions t
         JOIN accounts a ON t.account_id = a.id
         LEFT JOIN categories c ON t.category_id = c.id
@@ -60,46 +90,56 @@ def load_transactions_by_account_id(account_id):
     """
     return pd.read_sql(text(q), engine, params={"id": account_id})
 
-# ── Main selectors
+# ── Choose filter mode
+mode = st.radio("Filter by", ["Entity", "Bank/Fintech", "Account"], horizontal=True)
 
-entities = load_entities()
-if not entities:
-    st.error("No entities found. Please add accounts first.")
-    st.stop()
-selected_entity = st.selectbox("Select entity", entities)
+# ── Apply filters
+if mode == "Entity":
+    entities = load_entities()
+    if not entities:
+        st.error("No entities found.")
+        st.stop()
+    sel_entity = st.selectbox("Select entity", entities)
+    df = load_transactions_by_entity(sel_entity)
 
-institutions = load_institutions(selected_entity)
-if not institutions:
-    st.error(f"No institutions for entity '{selected_entity}'.")
-    st.stop()
-selected_institution = st.selectbox("Select Bank/Fintech", institutions)
+elif mode == "Bank/Fintech":
+    entities = load_entities()
+    if not entities:
+        st.error("No entities found.")
+        st.stop()
+    sel_entity = st.selectbox("Select entity", entities)
+    insts = load_institutions(sel_entity)
+    if not insts:
+        st.error(f"No institutions for '{sel_entity}'.")
+        st.stop()
+    sel_inst = st.selectbox("Select Bank/Fintech", insts)
+    df = load_transactions_by_institution(sel_entity, sel_inst)
 
-accounts_df = load_accounts(selected_entity, selected_institution)
-if accounts_df.empty:
-    st.error(f"No accounts for {selected_entity} / {selected_institution}.")
-    st.stop()
+else:  # Account mode
+    entities = load_entities()
+    if not entities:
+        st.error("No entities found.")
+        st.stop()
+    sel_entity = st.selectbox("Select entity", entities)
+    insts = load_institutions(sel_entity)
+    if not insts:
+        st.error(f"No institutions for '{sel_entity}'.")
+        st.stop()
+    sel_inst = st.selectbox("Select Bank/Fintech", insts)
+    acct_df = load_accounts(sel_entity, sel_inst)
+    if acct_df.empty:
+        st.error(f"No accounts under {sel_entity} / {sel_inst}.")
+        st.stop()
+    sel_disp = st.selectbox("Select account", acct_df["display"].tolist())
+    acct_id = int(acct_df.loc[acct_df["display"] == sel_disp, "id"].iloc[0])
+    df = load_transactions_by_account_id(acct_id)
 
-# build display labels: "Name (####)"
-accounts_df["display"] = (
-    accounts_df["name"] + " (" + accounts_df["masked_number"] + ")"
-)
-selected_display = st.selectbox("Select account", accounts_df["display"].tolist())
+# ── Display results
+st.subheader(f"Transactions ({mode})")
+st.dataframe(df, use_container_width=True)
 
-# get the corresponding id
-account_id = int(
-    accounts_df.loc[accounts_df["display"] == selected_display, "id"].iloc[0]
-)
-
-# ── Show transactions
-transactions_df = load_transactions_by_account_id(account_id)
-st.subheader(f"Transactions for {selected_entity} / {selected_institution} / {selected_display}")
-st.dataframe(transactions_df, use_container_width=True)
-
-# ── Sidebar: Manage Accounts
-
+# ── Sidebar: Manage Accounts (unchanged)
 st.sidebar.header("Manage Accounts")
-
-# ➕ Add account
 with st.sidebar.expander("➕ Add account", expanded=False):
     with st.form("add_account", clear_on_submit=True):
         new_entity      = st.text_input("Entity")
@@ -128,9 +168,9 @@ with st.sidebar.expander("➕ Add account", expanded=False):
             else:
                 st.sidebar.error("Fill in all fields to add an account.")
 
-# 🗑️ Delete account
 full_df = pd.read_sql(
-    "SELECT id, entity, institution, name, masked_number FROM accounts ORDER BY entity, institution, name;",
+    "SELECT id, entity, institution, name, masked_number FROM accounts "
+    "ORDER BY entity, institution, name;",
     engine
 )
 if not full_df.empty:
@@ -138,7 +178,8 @@ if not full_df.empty:
         full_df["display"] = (
             full_df["entity"] + " | " +
             full_df["institution"] + " | " +
-            full_df["name"] + " (" + full_df["masked_number"] + ")"
+            full_df["name"] + " (" +
+            full_df["masked_number"] + ")"
         )
         to_delete = st.selectbox("Select account to delete", full_df["display"].tolist())
         if st.button("Delete account"):
