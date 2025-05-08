@@ -1,14 +1,40 @@
 import streamlit as st
 import pandas as pd
 from sqlalchemy import create_engine, text
+import difflib
 
-# ── Page config
-st.set_page_config(page_title="AccountingDesk IA Dashboard 💸", layout="wide")
-st.title("AccountingDesk IA Dashboard 💸")
+# ── Page config (with emoji)
+st.set_page_config(page_title="💸 AccountingDesk IA Dashboard", layout="wide")
+st.title("💸 AccountingDesk IA Dashboard")
 
 # ── Database connection
 conn_uri = st.secrets["postgres"]["connection_uri"]
 engine = create_engine(conn_uri)
+
+# ── Required fields and variants for CSV import
+REQUIRED_FIELDS = {
+    "date": ["date", "fecha", "transaction_date"],
+    "description": ["description", "memo", "detalle"],
+    "amount": ["amount", "monto", "value"],
+    "currency": ["currency", "moneda", "curr"],
+    "account_name": ["account_name", "account", "cuenta"]
+}
+
+def map_columns(cols):
+    mapping = {}
+    for field, variants in REQUIRED_FIELDS.items():
+        match = None
+        for v in variants:
+            if v in cols:
+                match = v
+                break
+        if not match:
+            close = difflib.get_close_matches(field, cols, n=1, cutoff=0.6)
+            if close:
+                match = close[0]
+        if match:
+            mapping[field] = match
+    return mapping
 
 # ── Data loading functions
 
@@ -18,7 +44,7 @@ def load_entities():
         "SELECT DISTINCT entity FROM accounts WHERE entity IS NOT NULL ORDER BY entity;",
         engine
     )
-    return ["All Entities"] + df["entity"].tolist()
+    return ["All Entities"] + df["entity"].dropna().tolist()
 
 @st.cache_data
 def load_institutions(entity):
@@ -29,41 +55,32 @@ def load_institutions(entity):
         )
     else:
         df = pd.read_sql(
-            text(
-                "SELECT DISTINCT institution "
-                "FROM accounts "
-                "WHERE entity = :ent "
-                "ORDER BY institution;"
-            ),
-            engine,
-            params={"ent": entity}
+            text("SELECT DISTINCT institution FROM accounts WHERE entity = :ent ORDER BY institution;"),
+            engine, params={"ent": entity}
         )
     return ["All Banks"] + df["institution"].tolist()
 
 @st.cache_data
 def load_accounts(entity, institution):
-    # Fetch matching accounts
-    query = text(
-        "SELECT id, name, masked_number "
-        "FROM accounts "
-        "WHERE (:ent = 'All Entities' OR entity = :ent) "
-        "  AND (:inst = 'All Banks' OR institution = :inst) "
-        "ORDER BY name;"
+    df = pd.read_sql(
+        text(
+            "SELECT id, name, masked_number FROM accounts "
+            "WHERE (:ent = 'All Entities' OR entity = :ent) "
+            "  AND (:inst = 'All Banks' OR institution = :inst) "
+            "ORDER BY name;"
+        ),
+        engine, params={"ent": entity, "inst": institution}
     )
-    df = pd.read_sql(query, engine, params={"ent": entity, "inst": institution})
     df["display"] = df["name"] + " (" + df["masked_number"] + ")"
-    # Prepend the "All Accounts" row
     all_row = pd.DataFrame([{"id": None, "display": "All Accounts"}])
-    result = pd.concat([all_row, df[["id", "display"]]], ignore_index=True)
-    return result
+    return pd.concat([all_row, df[["id", "display"]]], ignore_index=True)
 
 @st.cache_data
 def load_transactions(filters):
     base = (
-        "SELECT "
-        "  t.id, t.date, t.description, t.amount, t.currency, "
-        "  a.entity, a.institution, "
-        "  c.name AS category, s.name AS subcategory "
+        "SELECT t.id, t.date, t.description, t.amount, t.currency, "
+        "a.entity, a.institution, "
+        "c.name AS category, s.name AS subcategory "
         "FROM transactions t "
         "JOIN accounts a ON t.account_id = a.id "
         "LEFT JOIN categories c ON t.category_id = c.id "
@@ -79,7 +96,6 @@ def load_transactions(filters):
     if filters.get("account_id") is not None:
         where.append("a.id = :aid")
         params["aid"] = filters["account_id"]
-
     if where:
         base += " WHERE " + " AND ".join(where)
     base += " ORDER BY t.date DESC;"
@@ -93,38 +109,66 @@ mode = st.radio(
     key="filter_mode"
 )
 
-filters = {"entity": None, "institution": None, "account_id": None}
-
-# ── Entity filter
+# ── Apply filters
+filters = {"entity": "All Entities", "institution": "All Banks", "account_id": None}
 if mode in ("Entity", "Bank/Fintech", "Account"):
-    entities = load_entities()
-    selected_entity = st.selectbox("Select entity", entities, key="sel_entity")
-    filters["entity"] = selected_entity
-else:
-    filters["entity"] = "All Entities"
-
-# ── Institution filter
+    filters["entity"] = st.selectbox("Select entity", load_entities(), key="sel_entity")
 if mode in ("Bank/Fintech", "Account"):
-    institutions = load_institutions(filters["entity"])
-    selected_institution = st.selectbox("Select Bank/Fintech", institutions, key="sel_inst")
-    filters["institution"] = selected_institution
-else:
-    filters["institution"] = "All Banks"
-
-# ── Account filter
+    filters["institution"] = st.selectbox(
+        "Select Bank/Fintech", 
+        load_institutions(filters["entity"]), 
+        key="sel_inst"
+    )
 if mode == "Account":
     acct_df = load_accounts(filters["entity"], filters["institution"])
-    selected_display = st.selectbox("Select account", acct_df["display"].tolist(), key="sel_acct")
-    if selected_display != "All Accounts":
-        filters["account_id"] = int(
-            acct_df.loc[acct_df["display"] == selected_display, "id"].iloc[0]
-        )
-    else:
-        filters["account_id"] = None
-else:
-    filters["account_id"] = None
+    disp = st.selectbox("Select account", acct_df["display"].tolist(), key="sel_acct")
+    filters["account_id"] = None if disp == "All Accounts" else int(
+        acct_df.loc[acct_df["display"] == disp, "id"].iloc[0]
+    )
 
-# ── Load and display transactions
+# ── CSV Importer without template
+st.sidebar.header("Import Transactions from CSV")
+uploaded = st.sidebar.file_uploader("Upload CSV", type="csv")
+if uploaded:
+    df_csv = pd.read_csv(uploaded)
+    st.sidebar.write("Detected columns:", df_csv.columns.tolist())
+    mapping = map_columns(df_csv.columns.tolist())
+    st.sidebar.write("Column mapping:", mapping)
+    missing = [f for f in REQUIRED_FIELDS if f not in mapping]
+    if missing:
+        st.sidebar.error(f"Missing fields: {missing}")
+    else:
+        df_mapped = df_csv.rename(columns=mapping)[list(mapping.values())]
+        df_mapped.columns = list(mapping.keys())
+        st.sidebar.write("Preview:", df_mapped.head())
+        if st.sidebar.button("Import to DB"):
+            with engine.begin() as conn:
+                doc_id = conn.execute(text(
+                    "INSERT INTO documents(file_name, source_type, uploaded_by) "
+                    "VALUES (:fn, 'csv', 'user') RETURNING id"
+                ), {"fn": uploaded.name}).scalar()
+                for _, row in df_mapped.iterrows():
+                    acct_id = conn.execute(text(
+                        "SELECT id FROM accounts WHERE name = :nm LIMIT 1"
+                    ), {"nm": row["account_name"]}).scalar()
+                    if acct_id:
+                        conn.execute(text(
+                            "INSERT INTO transactions "
+                            "(account_id, date, description, amount, currency, source_type, document_id) "
+                            "VALUES (:aid, :dt, :desc, :amt, :cur, 'csv', :doc)"
+                        ), {
+                            "aid": acct_id,
+                            "dt": row["date"],
+                            "desc": row["description"],
+                            "amt": row["amount"],
+                            "cur": row["currency"],
+                            "doc": doc_id
+                        })
+            st.sidebar.success("Imported successfully!")
+            st.cache_data.clear()
+            st.experimental_rerun()
+
+# ── Display transactions
 transactions_df = load_transactions(filters)
 st.subheader(f"Transactions ({mode})")
 st.dataframe(transactions_df, use_container_width=True)
@@ -143,7 +187,8 @@ with st.sidebar.expander("➕ Add account", expanded=False):
             if all([new_entity, new_institution, new_name, new_type, new_currency, new_masked]):
                 with engine.begin() as conn:
                     conn.execute(text(
-                        "INSERT INTO accounts (entity, institution, name, type, currency, masked_number) "
+                        "INSERT INTO accounts "
+                        "(entity, institution, name, type, currency, masked_number) "
                         "VALUES (:entity, :inst, :name, :type, :curr, :masked)"
                     ), {
                         "entity": new_entity,
@@ -160,8 +205,7 @@ with st.sidebar.expander("➕ Add account", expanded=False):
                 st.sidebar.error("Fill in all fields to add an account.")
 
 full_df = pd.read_sql(
-    "SELECT id, entity, institution, name, masked_number FROM accounts "
-    "ORDER BY entity, institution, name;",
+    "SELECT id, entity, institution, name, masked_number FROM accounts ORDER BY entity, institution, name;",
     engine
 )
 if not full_df.empty:
@@ -171,11 +215,7 @@ if not full_df.empty:
             full_df["institution"] + " | " +
             full_df["name"] + " (" + full_df["masked_number"] + ")"
         )
-        to_delete = st.selectbox(
-            "Select account to delete",
-            full_df["display"].tolist(),
-            key="del_acct"
-        )
+        to_delete = st.selectbox("Select account to delete", full_df["display"].tolist(), key="del_acct")
         if st.button("Delete account"):
             acct_id = int(full_df.loc[full_df["display"] == to_delete, "id"].iloc[0])
             with engine.begin() as conn:
