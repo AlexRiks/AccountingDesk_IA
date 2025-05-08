@@ -114,11 +114,7 @@ filters = {"entity": "All Entities", "institution": "All Banks", "account_id": N
 if mode in ("Entity", "Bank/Fintech", "Account"):
     filters["entity"] = st.selectbox("Select entity", load_entities(), key="sel_entity")
 if mode in ("Bank/Fintech", "Account"):
-    filters["institution"] = st.selectbox(
-        "Select Bank/Fintech", 
-        load_institutions(filters["entity"]), 
-        key="sel_inst"
-    )
+    filters["institution"] = st.selectbox("Select Bank/Fintech", load_institutions(filters["entity"]), key="sel_inst")
 if mode == "Account":
     acct_df = load_accounts(filters["entity"], filters["institution"])
     disp = st.selectbox("Select account", acct_df["display"].tolist(), key="sel_acct")
@@ -126,7 +122,7 @@ if mode == "Account":
         acct_df.loc[acct_df["display"] == disp, "id"].iloc[0]
     )
 
-# ── CSV Importer without template
+# ── CSV Importer (always visible)
 st.sidebar.header("Import Transactions from CSV")
 uploaded = st.sidebar.file_uploader("Upload CSV", type="csv")
 if uploaded:
