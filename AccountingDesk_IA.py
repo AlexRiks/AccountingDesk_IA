@@ -13,7 +13,10 @@ engine = create_engine(conn_uri)
 # ── Funciones de carga
 @st.cache_data
 def load_account_names():
-    df = pd.read_sql("SELECT DISTINCT name FROM accounts ORDER BY name;", engine)
+    df = pd.read_sql(
+        "SELECT DISTINCT name FROM accounts WHERE name IS NOT NULL ORDER BY name;",
+        engine
+    )
     return df["name"].tolist()
 
 @st.cache_data
@@ -47,6 +50,9 @@ def load_transactions_by_name(name):
 
 # ── Selector agrupado por nombre
 account_names = load_account_names()
+if not account_names:
+    st.error("No accounts found. Please add one via the sidebar.")
+    st.stop()
 selected_account = st.selectbox("Select account", account_names)
 
 # ── Mostrar transacciones
@@ -63,11 +69,12 @@ with st.sidebar.expander("➕ Add account", expanded=False):
         new_entity      = st.text_input("Entity")
         new_institution = st.text_input("Bank/Fintech")
         new_name        = st.text_input("Name")
-        new_type        = st.selectbox("Type", ["Bank", "Credit Card", "Paypal"])
+        new_type        = st.selectbox("Type", ["Bank", "Credit Card"])
         new_currency    = st.text_input("Currency", value="USD")
         new_masked      = st.text_input("Last 4 digits")
-        if st.form_submit_button("Add Account"):
-            if all([new_entity, new_institution, new_name, new_currency, new_masked]):
+        submit_add = st.form_submit_button("Add Account")
+        if submit_add:
+            if all([new_entity, new_institution, new_name, new_type, new_currency, new_masked]):
                 with engine.begin() as conn:
                     conn.execute(text(
                         "INSERT INTO accounts (entity, institution, name, type, currency, masked_number) "
@@ -88,21 +95,27 @@ with st.sidebar.expander("➕ Add account", expanded=False):
 
 # 🗑️ Eliminar cuenta
 full_accounts_df = load_full_accounts()
-if not full_accounts_df.empty:
+if full_accounts_df.empty:
+    st.sidebar.info("No accounts found.")
+else:
     with st.sidebar.expander("🗑️ Delete account", expanded=False):
         full_accounts_df["display"] = (
-            full_accounts_df["entity"] + " | " +
-            full_accounts_df["institution"] + " | " +
-            full_accounts_df["name"] + " (" +
-            full_accounts_df["masked_number"] + ")"
+            full_accounts_df["entity"]
+            + " | "
+            + full_accounts_df["institution"]
+            + " | "
+            + full_accounts_df["name"]
+            + " ("
+            + full_accounts_df["masked_number"]
+            + ")"
         )
         to_delete = st.selectbox("Select account to delete", full_accounts_df["display"])
         if st.button("Delete account"):
-            acct_id = int(full_accounts_df.loc[full_accounts_df["display"] == to_delete, "id"].iloc[0])
+            acct_id = int(
+                full_accounts_df.loc[full_accounts_df["display"] == to_delete, "id"].iloc[0]
+            )
             with engine.begin() as conn:
                 conn.execute(text("DELETE FROM accounts WHERE id = :id"), {"id": acct_id})
             st.sidebar.success("Account deleted.")
             st.cache_data.clear()
             st.experimental_rerun()
-else:
-    st.sidebar.info("No accounts found.")
