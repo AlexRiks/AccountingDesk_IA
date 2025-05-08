@@ -22,44 +22,41 @@ def load_entities():
 
 @st.cache_data
 def load_institutions(entity):
-    df = pd.read_sql(
-        "SELECT DISTINCT institution FROM accounts WHERE entity = :ent ORDER BY institution;",
-        engine,
-        params={"ent": entity}
+    query = text(
+        "SELECT DISTINCT institution "
+        "FROM accounts "
+        "WHERE entity = :ent "
+        "ORDER BY institution;"
     )
+    df = pd.read_sql(query, engine, params={"ent": entity})
     return df["institution"].tolist()
 
 @st.cache_data
 def load_accounts(entity=None, institution=None):
-    query = """
-      SELECT id, name, masked_number
-      FROM accounts
-      WHERE (:ent IS NULL OR entity = :ent)
-        AND (:inst IS NULL OR institution = :inst)
-      ORDER BY name;
-    """
-    df = pd.read_sql(
-        text(query),
-        engine,
-        params={"ent": entity, "inst": institution}
+    query = text(
+        "SELECT id, name, masked_number "
+        "FROM accounts "
+        "WHERE (:ent IS NULL OR entity = :ent) "
+        "  AND (:inst IS NULL OR institution = :inst) "
+        "ORDER BY name;"
     )
+    df = pd.read_sql(query, engine, params={"ent": entity, "inst": institution})
     df["display"] = df["name"] + " (" + df["masked_number"] + ")"
     return df
 
 @st.cache_data
 def load_transactions(filters):
-    base = """
-        SELECT
-          t.id, t.date, t.description, t.amount, t.currency,
-          a.entity, a.institution,
-          c.name AS category, s.name AS subcategory
-        FROM transactions t
-        JOIN accounts a ON t.account_id = a.id
-        LEFT JOIN categories c ON t.category_id = c.id
-        LEFT JOIN subcategories s ON t.subcategory_id = s.id
-    """
-    where = []
-    params = {}
+    base = (
+        "SELECT "
+        "  t.id, t.date, t.description, t.amount, t.currency, "
+        "  a.entity, a.institution, "
+        "  c.name AS category, s.name AS subcategory "
+        "FROM transactions t "
+        "JOIN accounts a ON t.account_id = a.id "
+        "LEFT JOIN categories c ON t.category_id = c.id "
+        "LEFT JOIN subcategories s ON t.subcategory_id = s.id "
+    )
+    where, params = [], {}
     if filters.get("entity"):
         where.append("a.entity = :ent")
         params["ent"] = filters["entity"]
@@ -69,11 +66,9 @@ def load_transactions(filters):
     if filters.get("account_id"):
         where.append("a.id = :aid")
         params["aid"] = filters["account_id"]
-
     if where:
         base += " WHERE " + " AND ".join(where)
     base += " ORDER BY t.date DESC;"
-
     return pd.read_sql(text(base), engine, params=params)
 
 # ── Filter mode selector
@@ -92,24 +87,16 @@ if mode in ("Entity", "Bank/Fintech", "Account"):
     if not entities:
         st.error("No entities found. Please add accounts first.")
         st.stop()
-    selected_entity = st.selectbox(
-        "Select entity",
-        entities,
-        key="sel_entity"
-    )
+    selected_entity = st.selectbox("Select entity", entities, key="sel_entity")
     filters["entity"] = selected_entity
 
 # ── Institution filter
 if mode in ("Bank/Fintech", "Account"):
-    institutions = load_institutions(selected_entity)
+    institutions = load_institutions(filters["entity"])
     if not institutions:
-        st.error(f"No institutions for '{selected_entity}'.")
+        st.error(f"No institutions for '{filters['entity']}'.")
         st.stop()
-    selected_institution = st.selectbox(
-        "Select Bank/Fintech",
-        institutions,
-        key="sel_inst"
-    )
+    selected_institution = st.selectbox("Select Bank/Fintech", institutions, key="sel_inst")
     filters["institution"] = selected_institution
 
 # ── Account filter
@@ -118,14 +105,8 @@ if mode == "Account":
     if acct_df.empty:
         st.error(f"No accounts under {filters['entity']} / {filters['institution']}.")
         st.stop()
-    selected_display = st.selectbox(
-        "Select account",
-        acct_df["display"].tolist(),
-        key="sel_acct"
-    )
-    filters["account_id"] = int(
-        acct_df.loc[acct_df["display"] == selected_display, "id"].iloc[0]
-    )
+    selected_display = st.selectbox("Select account", acct_df["display"].tolist(), key="sel_acct")
+    filters["account_id"] = int(acct_df.loc[acct_df["display"] == selected_display, "id"].iloc[0])
 
 # ── Load and display transactions
 transactions_df = load_transactions(filters)
@@ -167,8 +148,7 @@ with st.sidebar.expander("➕ Add account", expanded=False):
 
 # 🗑️ Delete account
 full_df = pd.read_sql(
-    "SELECT id, entity, institution, name, masked_number FROM accounts "
-    "ORDER BY entity, institution, name;",
+    "SELECT id, entity, institution, name, masked_number FROM accounts ORDER BY entity, institution, name;",
     engine
 )
 if not full_df.empty:
@@ -179,11 +159,7 @@ if not full_df.empty:
             full_df["name"] + " (" +
             full_df["masked_number"] + ")"
         )
-        to_delete = st.selectbox(
-            "Select account to delete",
-            full_df["display"].tolist(),
-            key="del_acct"
-        )
+        to_delete = st.selectbox("Select account to delete", full_df["display"].tolist(), key="del_acct")
         if st.button("Delete account"):
             acct_id = int(full_df.loc[full_df["display"] == to_delete, "id"].iloc[0])
             with engine.begin() as conn:
