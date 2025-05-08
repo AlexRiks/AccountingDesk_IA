@@ -18,7 +18,10 @@ def load_account_names():
 
 @st.cache_data
 def load_full_accounts():
-    return pd.read_sql("SELECT id, entity, institution, name, masked_number FROM accounts ORDER BY name;", engine)
+    return pd.read_sql(
+        "SELECT id, entity, institution, name, masked_number FROM accounts ORDER BY name;",
+        engine
+    )
 
 @st.cache_data
 def load_transactions_by_name(name):
@@ -57,12 +60,12 @@ st.sidebar.header("Manage Accounts")
 # ➕ Agregar cuenta
 with st.sidebar.expander("➕ Add account", expanded=False):
     with st.form("add_account", clear_on_submit=True):
-        new_entity     = st.text_input("Entity")
-        new_institution= st.text_input("Bank/Fintech")
-        new_name       = st.text_input("Name")
-        new_type       = st.selectbox("Type", ["bank", "credit card", "paypal"])
-        new_currency   = st.text_input("Currency", value="USD")
-        new_masked     = st.text_input("Last 4 digits")
+        new_entity      = st.text_input("Entity")
+        new_institution = st.text_input("Bank/Fintech")
+        new_name        = st.text_input("Name")
+        new_type        = st.selectbox("Type", ["Bank", "Credit Card", "Paypal"])
+        new_currency    = st.text_input("Currency", value="USD")
+        new_masked      = st.text_input("Last 4 digits")
         if st.form_submit_button("Add Account"):
             if all([new_entity, new_institution, new_name, new_currency, new_masked]):
                 with engine.begin() as conn:
@@ -87,7 +90,6 @@ with st.sidebar.expander("➕ Add account", expanded=False):
 full_accounts_df = load_full_accounts()
 if not full_accounts_df.empty:
     with st.sidebar.expander("🗑️ Delete account", expanded=False):
-        # Mostrar entidad, institución, nombre y dígitos para diferenciar
         full_accounts_df["display"] = (
             full_accounts_df["entity"] + " | " +
             full_accounts_df["institution"] + " | " +
@@ -99,8 +101,11 @@ if not full_accounts_df.empty:
             acct_id = int(full_accounts_df.loc[full_accounts_df["display"] == to_delete, "id"].iloc[0])
             with engine.begin() as conn:
                 conn.execute(text("DELETE FROM accounts WHERE id = :id"), {"id": acct_id})
-            st.sidebar.success(f"Account deleted.")
+            st.sidebar.success("Account deleted.")
             st.cache_data.clear()
+            st.experimental_rerun()
+else:
+    st.sidebar.info("No accounts found.")
             st.experimental_rerun()
 else:
     st.sidebar.info("No accounts found.")
