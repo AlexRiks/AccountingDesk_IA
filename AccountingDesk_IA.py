@@ -106,6 +106,3 @@ if not full_accounts_df.empty:
             st.experimental_rerun()
 else:
     st.sidebar.info("No accounts found.")
-            st.experimental_rerun()
-else:
-    st.sidebar.info("No accounts found.")
