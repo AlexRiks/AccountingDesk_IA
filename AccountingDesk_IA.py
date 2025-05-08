@@ -3,6 +3,69 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 
 # ── Page config
+st.set_page_config(page_title="AccountingDesk IA Dashboard 💸", layout="wide")
+st.title("AccountingDesk IA Dashboard 💸")
+
+# ── Database connection
+conn_uri = st.secrets["postgres"]["connection_uri"]
+engine = create_engine(conn_uri)
+
+# ── Data loading functions
+
+@st.cache_data
+def load_entities():
+    df = pd.read_sql(
+        "SELECT DISTINCT entity FROM accounts WHERE entity IS NOT NULL ORDER BY entity;",
+        engine
+    )
+    return ["All Entities"] + df["entity"].tolist()
+
+@st.cache_data
+def load_institutions(entity):
+    if entity == "All Entities":
+        df = pd.read_sql(
+            "SELECT DISTINCT institution FROM accounts WHERE institution IS NOT NULL ORDER BY institution;",
+            engine
+        )
+    else:
+        df = pd.read_sql(
+            text(
+                "SELECT DISTINCT institution "
+                "FROM accounts "
+                "WHERE entity = :ent "
+                "ORDER BY institution;"
+            ),
+            engine,
+            params={"ent": entity}
+        )
+    return ["All Banks"] + df["institution"].tolist()
+
+@st.cache_data
+def load_accounts(entity, institution):
+    query = text(
+        "SELECT id, name, masked_number "
+        "FROM accounts "
+        "WHERE (:ent = 'All Entities' OR entity = :ent) "
+        "  AND (:inst = 'All Banks' OR institution = :inst) "
+        "ORDER BY name;"
+    )
+    df = pd.read_sql(query, engine, params={"ent": entity, "inst": institution})
+    df["display"] = df["name"] + " (" + df["masked_number"] + ")"
+    all_row = pd.DataFrame([{"id": None, "display": "All Accounts"}])
+    return pd.concat([all_row, df[["id", "display"]]], ignore_index=True)
+
+@st.cache_data
+def load_transactions(filters):
+    base = (
+        "SELECT "
+        "  t.id, t.date, t.description, t.amount, t.currency, "
+        "  a.entity, a.institution, "
+        "  c.name AS category, s.name AS subcategory "
+        "FROM transactions timport streamlit as st
+import pandas as pd
+from sqlalchemy import create_engine, text
+
+# ── Page config
 st.set_page_config(page_title="AccountingDesk IA Dashboard", layout="wide")
 st.title("AccountingDesk IA Dashboard")
 
