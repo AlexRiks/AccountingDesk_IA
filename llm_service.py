@@ -1,5 +1,5 @@
-
 import openai
+import os
 
 openai.api_key = "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"
 
