@@ -64,7 +64,7 @@ else:
 
 # Database/Categories Status
 if st.session_state.categories_loaded:
-    st.sidebar.success(f"✅ {len(master_categories_list_from_db)} categories loaded from database.")
+    st.sidebar.success(f"✅ {len(master_categories_list_from_db)} categories loaded.")
 else:
     st.sidebar.error("❌ No categories found in database. Classification may not work.")
     st.sidebar.markdown("Ensure `app_database.db` is present and populated.")
