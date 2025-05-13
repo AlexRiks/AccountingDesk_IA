@@ -2,8 +2,21 @@
 import sqlite3
 import pandas as pd
 import hashlib
+import re # For normalization
 
 DATABASE_NAME = "app_database.db"
+
+def normalize_description(description):
+    """Normalizes a transaction description for more robust matching."""
+    if not isinstance(description, str):
+        return ""
+    # Convert to lowercase
+    text = description.lower()
+    # Remove non-alphanumeric characters (except spaces) and then normalize spaces
+    text = re.sub(r"[^a-z0-9\s]", "", text)
+    # Replace multiple spaces with a single space and strip leading/trailing spaces
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
 
 def get_db_connection():
     # Returns a database connection object.
@@ -12,7 +25,7 @@ def get_db_connection():
     return conn
 
 def create_tables():
-    # Creates the necessary database tables if they don't already exist.
+    # Creates the necessary database tables if they don"t already exist.
     conn = get_db_connection()
     cursor = conn.cursor()
 
@@ -30,8 +43,8 @@ def create_tables():
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS correcciones_aprendizaje (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        hash_descripcion TEXT NOT NULL UNIQUE,        -- Hash of the transaction description
-        descripcion_transaccion TEXT NOT NULL,      -- Original transaction description
+        hash_descripcion TEXT NOT NULL UNIQUE,        -- Hash of the NORMALIZED transaction description
+        descripcion_transaccion_original TEXT NOT NULL, -- Original transaction description for reference
         categoria_corregida TEXT NOT NULL,        -- Corrected category (in original language or English)
         subcategoria_corregida TEXT NOT NULL,     -- Corrected subcategory (in original language or English)
         timestamp_correccion DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -47,27 +60,21 @@ def load_categories_from_csv(csv_file_path):
     cursor = conn.cursor()
     try:
         df = pd.read_csv(csv_file_path)
-        # Use confirmed headers: 'Category' and 'Subcategory'
-        # Ensure these columns exist in the df
-        if 'Category' not in df.columns or 'Subcategory' not in df.columns:
-            print(f"Error: The CSV file {csv_file_path} must contain 'Category' and 'Subcategory' columns.")
+        if "Category" not in df.columns or "Subcategory" not in df.columns:
+            print(f"Error: The CSV file {csv_file_path} must contain "Category" and "Subcategory" columns.")
             return False
 
-        # Clear the table before loading to avoid duplicates if reloaded
         cursor.execute("DELETE FROM lista_categorias")
         conn.commit()
 
         for index, row in df.iterrows():
-            cat = row['Category']
-            sub_cat = row['Subcategory']
+            cat = row["Category"]
+            sub_cat = row["Subcategory"]
             if pd.notna(cat) and pd.notna(sub_cat):
                 try:
-                    # Storing category names as they are. If they need to be English, 
-                    # the source CSV should be in English or translated before this step.
                     cursor.execute("INSERT INTO lista_categorias (nombre_categoria, nombre_subcategoria) VALUES (?, ?)",
                                    (str(cat).strip(), str(sub_cat).strip()))
                 except sqlite3.IntegrityError:
-                    # Ignore duplicates if the previous cleaning fails or just in case
                     print(f"Duplicate category ignored: {cat} - {sub_cat}")
         conn.commit()
         print(f"Categories loaded successfully from {csv_file_path}")
@@ -79,43 +86,50 @@ def load_categories_from_csv(csv_file_path):
         conn.close()
 
 def get_all_categories():
-    # Retrieves all categories from the lista_categorias table.
-    # Returns a list of tuples: (category_name, subcategory_name)
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT nombre_categoria, nombre_subcategoria FROM lista_categorias ORDER BY nombre_categoria, nombre_subcategoria")
     categories = cursor.fetchall()
     conn.close()
-    return [(row['nombre_categoria'], row['nombre_subcategoria']) for row in categories]
+    return [(row["nombre_categoria"], row["nombre_subcategoria"]) for row in categories]
 
-def get_corrected_category(description_hash):
-    # Retrieves a manually corrected category for a given transaction description hash.
-    # Returns a tuple (corrected_category, corrected_subcategory) or None if not found.
+def get_corrected_category(normalized_description_hash):
+    # Retrieves a manually corrected category for a given NORMALIZED transaction description hash.
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT categoria_corregida, subcategoria_corregida FROM correcciones_aprendizaje WHERE hash_descripcion = ?", (description_hash,))
+    cursor.execute("SELECT categoria_corregida, subcategoria_corregida FROM correcciones_aprendizaje WHERE hash_descripcion = ?", 
+                   (normalized_description_hash,))
     row = cursor.fetchone()
     conn.close()
     if row:
-        return row['categoria_corregida'], row['subcategoria_corregida']
+        return row["categoria_corregida"], row["subcategoria_corregida"]
     return None
 
-def save_correction(description, category, subcategory):
+def save_correction(original_description, category, subcategory):
     # Saves or updates a manual correction for a transaction description.
+    # Uses a normalized version of the description for hashing.
     conn = get_db_connection()
     cursor = conn.cursor()
-    description_hash = hashlib.sha256(description.encode('utf-8')).hexdigest()
+    
+    normalized_desc = normalize_description(original_description)
+    if not normalized_desc: # Don"t save if normalization results in empty string
+        print(f"Skipping saving correction for empty/invalid original description: {original_description}")
+        return False
+        
+    description_hash = hashlib.sha256(normalized_desc.encode("utf-8")).hexdigest()
+    
     try:
         cursor.execute("""
-        INSERT INTO correcciones_aprendizaje (hash_descripcion, descripcion_transaccion, categoria_corregida, subcategoria_corregida)
+        INSERT INTO correcciones_aprendizaje (hash_descripcion, descripcion_transaccion_original, categoria_corregida, subcategoria_corregida)
         VALUES (?, ?, ?, ?)
         ON CONFLICT(hash_descripcion) DO UPDATE SET
+        descripcion_transaccion_original = excluded.descripcion_transaccion_original, -- Keep original desc updated if it changes for same normalized hash
         categoria_corregida = excluded.categoria_corregida,
         subcategoria_corregida = excluded.subcategoria_corregida,
         timestamp_correccion = CURRENT_TIMESTAMP
-        """, (description_hash, description, category, subcategory))
+        """, (description_hash, original_description, category, subcategory))
         conn.commit()
-        print(f"Correction saved for: {description[:50]}... -> {category} - {subcategory}")
+        print(f"Correction saved for (normalized): 	{normalized_desc[:50]}...	 -> {category} - {subcategory}")
         return True
     except Exception as e:
         print(f"Error saving correction: {e}")
@@ -124,15 +138,20 @@ def save_correction(description, category, subcategory):
         conn.close()
 
 # For initial testing and DB generation
-if __name__ == '__main__':
+if __name__ == "__main__":
     create_tables()
-    # Path to the user-provided CSV file
-    categories_csv_path = '/home/ubuntu/upload/Categories.csv' 
-    if load_categories_from_csv(categories_csv_path):
-        print(f"Database '{DATABASE_NAME}' populated successfully using {categories_csv_path}.")
-        all_cats = get_all_categories()
-        print(f"Total categories loaded: {len(all_cats)}")
-        # print("Sample categories:", all_cats[:5]) # Print a few samples
-    else:
-        print(f"Failed to populate database from {categories_csv_path}.")
+    # Example of normalization
+    # print(f"Normalized: {normalize_description("AIRBNB * HMROAS92K1 REFUND")}")
+    # print(f"Normalized: {normalize_description("Airbnb * HMROAS92K1 Refund")}")
+    # print(f"Normalized: {normalize_description("  AIRBNB *HMROAS92K1  REFUND  ")}")
+    
+    # Path to the user-provided CSV file (ensure it exists for testing)
+    # categories_csv_path = "/home/ubuntu/upload/Categories.csv" 
+    # if load_categories_from_csv(categories_csv_path):
+    #     print(f"Database 	{DATABASE_NAME}	 populated successfully using {categories_csv_path}.")
+    #     all_cats = get_all_categories()
+    #     print(f"Total categories loaded: {len(all_cats)}")
+    # else:
+    #     print(f"Failed to populate database from {categories_csv_path}.")
+    pass
 
