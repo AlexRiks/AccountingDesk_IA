@@ -61,7 +61,8 @@ def load_categories_from_csv(csv_file_path):
     try:
         df = pd.read_csv(csv_file_path)
         if "Category" not in df.columns or "Subcategory" not in df.columns:
-            print(f"Error: The CSV file {csv_file_path} must contain "Category" and "Subcategory" columns.")
+            # Corrected the print statement to use single quotes inside the f-string or escape double quotes.
+            print(f"Error: The CSV file {csv_file_path} must contain 'Category' and 'Subcategory' columns.")
             return False
 
         cursor.execute("DELETE FROM lista_categorias")
