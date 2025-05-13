@@ -56,11 +56,11 @@ else:
 st.sidebar.header("Status & Template")
 
 # API Key Status
-if st.session_state.api_key_set:
-    st.sidebar.success("✓ Gemini API Key loaded from Secrets.")
+if os.getenv("OPENAI_API_KEY") is None:
+    st.warning("❌ OpenAI API")
 else:
-    st.sidebar.error("✗ Google Gemini API Key not configured. AI classification may not work.")
-    st.sidebar.markdown("Please ensure `GOOGLE_API_KEY` is configured in Streamlit Cloud Secrets.")
+    st.success("✅ OpenAI API")
+    st.sidebar.markdown("Please ensure `OpenAI API` is configured in Streamlit Cloud Secrets.")
 
 # Database/Categories Status
 if st.session_state.categories_loaded:
