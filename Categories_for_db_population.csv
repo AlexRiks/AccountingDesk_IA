@@ -1,0 +1,228 @@
+Category,Subcategory,Notes,Label
+Admin,Accounting Charges,,Admin / Accounting Charges
+Admin,Advertising,,Admin / Advertising
+Admin,Bad Debt,,Admin / Bad Debt
+Admin,Bank Service Charges,,Admin / Bank Service Charges
+Admin,Bonus & Incentives,,Admin / Bonus & Incentives
+Admin,Cash Overage/Shortage,,Admin / Cash Overage/Shortage
+Admin,Cluster Services,,Admin / Cluster Services
+Admin,Complimentary Service & Gifts,,Admin / Complimentary Service & Gifts
+Admin,Contract Labor,,Admin / Contract Labor
+Admin,Contract Services,,Admin / Contract Services
+Admin,Credit Card Commissions,,Admin / Credit Card Commissions
+Admin,Decorations,,Admin / Decorations
+Admin,Donations,,Admin / Donations
+Admin,Dues & Subscriptions,,Admin / Dues & Subscriptions
+Admin,Employee Benefits,,Admin / Employee Benefits
+Admin,Entertainment In-House,,Admin / Entertainment In-House
+Admin,Equipment Rental,,Admin / Equipment Rental
+Admin,Human Resources,,Admin / Human Resources
+Admin,Insurance,,Admin / Insurance
+Admin,Legal Services,,Admin / Legal Services
+Admin,Licenses & Permits,,Admin / Licenses & Permits
+Admin,Miscellaneous,,Admin / Miscellaneous
+Admin,Music & Entertainment,,Admin / Music & Entertainment
+Admin,Operating Supplies,,Admin / Operating Supplies
+Admin,Payroll - Accounting,,Admin / Payroll - Accounting
+Admin,Payroll - Admin Assistant,,Admin / Payroll - Admin Assistant
+Admin,Payroll - Administrative,,Admin / Payroll - Administrative
+Admin,Payroll - Assistant General Manager,,Admin / Payroll - Assistant General Manager
+Admin,Payroll - General Manager,,Admin / Payroll - General Manager
+Admin,Payroll - Operations Manager,,Admin / Payroll - Operations Manager
+Admin,Payroll - Security Guard,,Admin / Payroll - Security Guard
+Admin,Payroll Processing,,Admin / Payroll Processing
+Admin,Payroll Taxes,,Admin / Payroll Taxes
+Admin,Postage & Delivery Charges,,Admin / Postage & Delivery Charges
+Admin,Printing & Stationery,,Admin / Printing & Stationery
+Admin,Professional Fees,,Admin / Professional Fees
+Admin,Sales Tax Compensation/Penalty,,Admin / Sales Tax Compensation/Penalty
+Admin,Security,,Admin / Security
+Admin,Supplemental Pay,,Admin / Supplemental Pay
+Admin,Training,,Admin / Training
+Admin,Transportation,,Admin / Transportation
+Admin,Travel,,Admin / Travel
+Admin,Uniforms,,Admin / Uniforms
+Admin,Workers Compensation,,Admin / Workers Compensation
+IT,Admin & General Systems,,IT / Admin & General Systems
+IT,Contract Services,,IT / Contract Services
+IT,Cost of Cell Phones,,IT / Cost of Cell Phones
+IT,Cost of Internet Services,,IT / Cost of Internet Services
+IT,Cost of Local Calls,,IT / Cost of Local Calls
+IT,Cost of Long Distance Calls,,IT / Cost of Long Distance Calls
+IT,Entertainment In-House,,IT / Entertainment In-House
+IT,Equipment Rental,,IT / Equipment Rental
+IT,Food & Beverage Systems,,IT / Food & Beverage Systems
+IT,Information Security,,IT / Information Security
+IT,Information Systems,,IT / Information Systems
+IT,Operating Supplies,,IT / Operating Supplies
+IT,Other Cost of Services,,IT / Other Cost of Services
+IT,Property Operations Systems,,IT / Property Operations Systems
+IT,Rooms Systems,,IT / Rooms Systems
+IT,Sales & Marketing Systems,,IT / Sales & Marketing Systems
+Maintenance,Bonus & Incentives,,Maintenance / Bonus & Incentives
+Maintenance,Building Repairs,,Maintenance / Building Repairs
+Maintenance,Cluster Services,,Maintenance / Cluster Services
+Maintenance,Contract Labor,,Maintenance / Contract Labor
+Maintenance,Contract Services,,Maintenance / Contract Services
+Maintenance,Dues & Subscriptions,,Maintenance / Dues & Subscriptions
+Maintenance,Electrical & Mechanical Equipment,,Maintenance / Electrical & Mechanical Equipment
+Maintenance,Electricity,,Maintenance / Electricity
+Maintenance,Elevators,,Maintenance / Elevators
+Maintenance,Employee Benefits,,Maintenance / Employee Benefits
+Maintenance,Engineering Supplies,,Maintenance / Engineering Supplies
+Maintenance,Equipment Rental,,Maintenance / Equipment Rental
+Maintenance,Floor Covering,,Maintenance / Floor Covering
+Maintenance,Furniture & Equipment,,Maintenance / Furniture & Equipment
+Maintenance,Gas & Oil,,Maintenance / Gas & Oil
+Maintenance,Grounds Maintenance & Landscaping,,Maintenance / Grounds Maintenance & Landscaping
+Maintenance,HVAC Repairs,,Maintenance / HVAC Repairs
+Maintenance,Ice Machine Repairs,,Maintenance / Ice Machine Repairs
+Maintenance,Kitchen Equipment,,Maintenance / Kitchen Equipment
+Maintenance,Laundry Equipment,,Maintenance / Laundry Equipment
+Maintenance,Licenses & Permits,,Maintenance / Licenses & Permits
+Maintenance,Life/Safety,,Maintenance / Life/Safety
+Maintenance,Light Bulbs,,Maintenance / Light Bulbs
+Maintenance,Maintenance Contracts,,Maintenance / Maintenance Contracts
+Maintenance,Miscellaneous,,Maintenance / Miscellaneous
+Maintenance,Operating Supplies,,Maintenance / Operating Supplies
+Maintenance,Painting & Decorating,,Maintenance / Painting & Decorating
+Maintenance,Payroll - Assistant Chief Engineer,,Maintenance / Payroll - Assistant Chief Engineer
+Maintenance,Payroll - Chief Engineer,,Maintenance / Payroll - Chief Engineer
+Maintenance,Payroll - Grounds & Pool Care,,Maintenance / Payroll - Grounds & Pool Care
+Maintenance,Payroll - Other Maintenance,,Maintenance / Payroll - Other Maintenance
+Maintenance,Payroll - PM Engineer,,Maintenance / Payroll - PM Engineer
+Maintenance,Payroll Taxes,,Maintenance / Payroll Taxes
+Maintenance,Pest Control,,Maintenance / Pest Control
+Maintenance,Plumbing,,Maintenance / Plumbing
+Maintenance,Printing & Stationery,,Maintenance / Printing & Stationery
+Maintenance,Snow Removal/Sweeping Fees,,Maintenance / Snow Removal/Sweeping Fees
+Maintenance,Supplemental Pay,,Maintenance / Supplemental Pay
+Maintenance,Swimming Pool,,Maintenance / Swimming Pool
+Maintenance,Television & Radio Repair,,Maintenance / Television & Radio Repair
+Maintenance,Training,,Maintenance / Training
+Maintenance,Travel,,Maintenance / Travel
+Maintenance,Uniforms,,Maintenance / Uniforms
+Maintenance,Vehicle Repairs,,Maintenance / Vehicle Repairs
+Maintenance,Waste Removal,,Maintenance / Waste Removal
+Maintenance,Water & Sewer,,Maintenance / Water & Sewer
+Maintenance,Workers Compensation,,Maintenance / Workers Compensation
+Non-Operating,Amortization,,Non-Operating / Amortization
+Non-Operating,Building Insurance,,Non-Operating / Building Insurance
+Non-Operating,Business & Occupation Taxes,,Non-Operating / Business & Occupation Taxes
+Non-Operating,Contract Services,,Non-Operating / Contract Services
+Non-Operating,Depreciation,,Non-Operating / Depreciation
+Non-Operating,Equipment Lease,,Non-Operating / Equipment Lease
+Non-Operating,Gain/Loss on Fixed Asset,,Non-Operating / Gain/Loss on Fixed Asset
+Non-Operating,Incentive Management Fees,,Non-Operating / Incentive Management Fees
+Non-Operating,Income Taxes,,Non-Operating / Income Taxes
+Non-Operating,Land Lease Expense,,Non-Operating / Land Lease Expense
+Non-Operating,Liability Insurance,,Non-Operating / Liability Insurance
+Non-Operating,Management Fees,,Non-Operating / Management Fees
+Non-Operating,Mortgage Interest,,Non-Operating / Mortgage Interest
+Non-Operating,Note Interest,,Non-Operating / Note Interest
+Non-Operating,Other Taxes & Assessments,,Non-Operating / Other Taxes & Assessments
+Non-Operating,Owner Expenses,,Non-Operating / Owner Expenses
+Non-Operating,Property Taxes,,Non-Operating / Property Taxes
+Non-Operating,Real Estate Taxes,,Non-Operating / Real Estate Taxes
+Non-Operating,Rent,,Non-Operating / Rent
+Other Expense,Attrition Fees,,Other Expense / Attrition Fees
+Other Expense,Cancellation Fees,,Other Expense / Cancellation Fees
+Other Expense,Cash Discounts Earned,,Other Expense / Cash Discounts Earned
+Other Expense,Commission,,Other Expense / Commission
+Other Expense,Interest,,Other Expense / Interest
+Other Expense,Internet,,Other Expense / Internet
+Other Expense,Miscellaneous,,Other Expense / Miscellaneous
+Other Expense,Package Breakage,,Other Expense / Package Breakage
+Other Expense,Pet Fees,,Other Expense / Pet Fees
+Other Expense,Resort Fees,,Other Expense / Resort Fees
+Other Expense,Salvage Sales,,Other Expense / Salvage Sales
+Other Expense,Smoking Fees,,Other Expense / Smoking Fees
+Other Expense,Space Rental and Concessions,,Other Expense / Space Rental and Concessions
+Other Expense,Telephone,,Other Expense / Telephone
+Other Expense,Vending Commissions,,Other Expense / Vending Commissions
+Rooms,Advertising,,Rooms / Advertising
+Rooms,Bonus & Incentives,,Rooms / Bonus & Incentives
+Rooms,Cleaning Supplies,,Rooms / Cleaning Supplies
+Rooms,Cluster Services,,Rooms / Cluster Services
+Rooms,Commissions,,Rooms / Commissions
+Rooms,Complimentary F & B,,Rooms / Complimentary F & B
+Rooms,Complimentary In Room Entertainment,,Rooms / Complimentary In Room Entertainment
+Rooms,Complimentary Service & Gifts,,Rooms / Complimentary Service & Gifts
+Rooms,Contract Labor,,Rooms / Contract Labor
+Rooms,Contract Services,,Rooms / Contract Services
+Rooms,Decorations,,Rooms / Decorations
+Rooms,Dues & Subscriptions,,Rooms / Dues & Subscriptions
+Rooms,Employee Benefits,,Rooms / Employee Benefits
+Rooms,Equipment Rental,,Rooms / Equipment Rental
+Rooms,Guest Relocation,,Rooms / Guest Relocation
+Rooms,Guest Supplies,,Rooms / Guest Supplies
+Rooms,Guest Transportation,,Rooms / Guest Transportation
+Rooms,Laundry Supplies,,Rooms / Laundry Supplies
+Rooms,Licenses & Permits,,Rooms / Licenses & Permits
+Rooms,Linen Replenishment,,Rooms / Linen Replenishment
+Rooms,Miscellaneous,,Rooms / Miscellaneous
+Rooms,Operating Supplies,,Rooms / Operating Supplies
+Rooms,Payroll - Assistant Housekeeper,,Rooms / Payroll - Assistant Housekeeper
+Rooms,Payroll - Bell Captain,,Rooms / Payroll - Bell Captain
+Rooms,Payroll - Bellman,,Rooms / Payroll - Bellman
+Rooms,Payroll - Business Center Hostess,,Rooms / Payroll - Business Center Hostess
+Rooms,Payroll - Executive Housekeeper,,Rooms / Payroll - Executive Housekeeper
+Rooms,Payroll - FD Guest Ser Manager,,Rooms / Payroll - FD Guest Ser Manager
+Rooms,Payroll - Front Desk Supervisor,,Rooms / Payroll - Front Desk Supervisor
+Rooms,Payroll - Guest Service Manager,,Rooms / Payroll - Guest Service Manager
+Rooms,Payroll - Guest Service Rep,,Rooms / Payroll - Guest Service Rep
+Rooms,Payroll - Hospitality AM,,Rooms / Payroll - Hospitality AM
+Rooms,Payroll - Hospitality PM,,Rooms / Payroll - Hospitality PM
+Rooms,Payroll - House Person,,Rooms / Payroll - House Person
+Rooms,Payroll - Housekeepers,,Rooms / Payroll - Housekeepers
+Rooms,Payroll - Laundry Attendant,,Rooms / Payroll - Laundry Attendant
+Rooms,Payroll - Night Auditor,,Rooms / Payroll - Night Auditor
+Rooms,Payroll - Night House Person,,Rooms / Payroll - Night House Person
+Rooms,Payroll - Reservations Desk,,Rooms / Payroll - Reservations Desk
+Rooms,Payroll - Suite Care,,Rooms / Payroll - Suite Care
+Rooms,Payroll - Trainee,,Rooms / Payroll - Trainee
+Rooms,Payroll - Van Driver,,Rooms / Payroll - Van Driver
+Rooms,Payroll Taxes,,Rooms / Payroll Taxes
+Rooms,Postage & Delivery Charges,,Rooms / Postage & Delivery Charges
+Rooms,Printing & Stationery,,Rooms / Printing & Stationery
+Rooms,Reservations,,Rooms / Reservations
+Rooms,Royalty Fees,,Rooms / Royalty Fees
+Rooms,Supplemental Pay,,Rooms / Supplemental Pay
+Rooms,Training,,Rooms / Training
+Rooms,Travel,,Rooms / Travel
+Rooms,Uniforms,,Rooms / Uniforms
+Rooms,Workers Compensation,,Rooms / Workers Compensation
+S&M,Advertising,,S&M / Advertising
+S&M,Agency Fees,,S&M / Agency Fees
+S&M,Bonus & Incentives,,S&M / Bonus & Incentives
+S&M,Cluster Services,,S&M / Cluster Services
+S&M,Complimentary Service & Gifts,,S&M / Complimentary Service & Gifts
+S&M,Contract Labor,,S&M / Contract Labor
+S&M,Decorations,,S&M / Decorations
+S&M,Direct Mail,,S&M / Direct Mail
+S&M,Dues & Subscriptions,,S&M / Dues & Subscriptions
+S&M,Employee Benefits,,S&M / Employee Benefits
+S&M,Entertainment In-House,,S&M / Entertainment In-House
+S&M,Equipment Rental,,S&M / Equipment Rental
+S&M,Franchise Fee,,S&M / Franchise Fee
+S&M,Loyalty Programs & Affiliation Fee,,S&M / Loyalty Programs & Affiliation Fee
+S&M,Media,,S&M / Media
+S&M,Miscellaneous,,S&M / Miscellaneous
+S&M,Operating Supplies,,S&M / Operating Supplies
+S&M,Outside Signage,,S&M / Outside Signage
+S&M,Payroll - Director of Sales,,S&M / Payroll - Director of Sales
+S&M,Payroll - Market Director of Sales,,S&M / Payroll - Market Director of Sales
+S&M,Payroll - Sales & Service Coordinator,,S&M / Payroll - Sales & Service Coordinator
+S&M,Payroll - Sales Manager,,S&M / Payroll - Sales Manager
+S&M,Payroll - Senior Sales Manager,,S&M / Payroll - Senior Sales Manager
+S&M,Payroll Taxes,,S&M / Payroll Taxes
+S&M,Postage & Delivery Charges,,S&M / Postage & Delivery Charges
+S&M,Printing & Stationery,,S&M / Printing & Stationery
+S&M,Promotion,,S&M / Promotion
+S&M,Supplemental Pay,,S&M / Supplemental Pay
+S&M,Training,,S&M / Training
+S&M,Travel - Food & Beverage,,S&M / Travel - Food & Beverage
+S&M,Travel - Lodging,,S&M / Travel - Lodging
+S&M,Uniforms,,S&M / Uniforms
+S&M,Website,,S&M / Website
+S&M,Workers Compensation,,S&M / Workers Compensation
