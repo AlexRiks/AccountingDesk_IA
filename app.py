@@ -214,5 +214,5 @@ if st.session_state.edited_transactions_df is not None:
         )
 
 st.sidebar.markdown("------")
-st.sidebar.info("Developed by BSCH")
+st.sidebar.info("Developed by BSH")
 
