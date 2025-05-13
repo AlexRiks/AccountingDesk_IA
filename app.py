@@ -57,9 +57,9 @@ st.sidebar.header("Status & Template")
 
 # API Key Status
 if os.getenv("OPENAI_API_KEY") is None:
-    st.sidebar.success("❌ OpenAI API")
+    st.sidebar.error("❌ OpenAI API")
 else:
-    st.sidebar.error("✅ OpenAI API")
+    st.sidebar.success("✅ OpenAI API")
     st.sidebar.markdown("Please ensure `OpenAI API` is configured in Streamlit Cloud Secrets.")
 
 # Database/Categories Status
@@ -213,6 +213,6 @@ if st.session_state.edited_transactions_df is not None:
             mime="text/csv",
         )
 
-st.sidebar.markdown("---_---")
-st.sidebar.info("Developed by Manus AI Agent")
+st.sidebar.markdown("------")
+st.sidebar.info("Developed by BSCH")
 
