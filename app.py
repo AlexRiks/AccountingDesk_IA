@@ -57,9 +57,9 @@ st.sidebar.header("Status & Template")
 
 # API Key Status
 if os.getenv("OPENAI_API_KEY") is None:
-    st.warning("❌ OpenAI API")
+    st.sidebar.success("❌ OpenAI API")
 else:
-    st.success("✅ OpenAI API")
+    st.sidebar.error("✅ OpenAI API")
     st.sidebar.markdown("Please ensure `OpenAI API` is configured in Streamlit Cloud Secrets.")
 
 # Database/Categories Status
