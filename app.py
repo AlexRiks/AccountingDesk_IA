@@ -1,4 +1,4 @@
-# app.py
+
 import streamlit as st
 import pandas as pd
 import database_utils
@@ -6,61 +6,39 @@ import classification_engine
 import llm_service
 import os
 
-# --- Page Config ---
 st.set_page_config(
     layout="wide", 
     page_title="AI Transaction Classifier", 
-    initial_sidebar_state="expanded" # Allows user to collapse
+    initial_sidebar_state="expanded"
 )
 
-# --- Database Initialization ---
 database_utils.create_tables()
 master_categories_list_from_db = database_utils.get_all_categories()
 
-# --- Helper Functions ---
 def convert_df_to_csv(df):
     return df.to_csv(index=False).encode("utf-8")
 
-# --- Session State Initialization ---
-if "api_key_set" not in st.session_state:
-    st.session_state.api_key_set = False
-if "google_api_key" not in st.session_state:
-    try:
-        st.session_state.google_api_key = st.secrets.get("GOOGLE_API_KEY", "")
-    except Exception:
-        st.session_state.google_api_key = ""
-        
 if "transactions_df" not in st.session_state:
     st.session_state.transactions_df = None
 if "edited_transactions_df" not in st.session_state:
     st.session_state.edited_transactions_df = None
 if "categories_loaded" not in st.session_state:
     st.session_state.categories_loaded = bool(master_categories_list_from_db)
-
 if "master_categories_list_for_selectbox" not in st.session_state:
     if master_categories_list_from_db:
         st.session_state.master_categories_list_for_selectbox = ["Uncategorized"] + [f"{cat} - {subcat}" for cat, subcat in master_categories_list_from_db]
     else:
         st.session_state.master_categories_list_for_selectbox = ["Uncategorized"]
 
-# --- API Key Configuration ---
-if st.session_state.google_api_key:
-    if llm_service.configure_gemini(st.session_state.google_api_key):
-        st.session_state.api_key_set = True
-    else:
-        st.session_state.api_key_set = False
-else:
-    st.session_state.api_key_set = False
-
 # --- Sidebar ---
 st.sidebar.header("Status & Template")
 
 # API Key Status
-if os.getenv("OPENAI_API_KEY") is None:
-    st.sidebar.error("❌ OpenAI API.")
-    st.sidebar.markdown("Please ensure `OpenAI API` is configured in Streamlit Cloud Secrets.")
+if st.secrets.get("OPENAI_API_KEY") is None:
+    st.sidebar.error("❌ OpenAI API Key not configured.")
+    st.sidebar.markdown("Please ensure `OPENAI_API_KEY` is set in Streamlit Cloud Secrets.")
 else:
-    st.sidebar.success("✅ OpenAI API.")
+    st.sidebar.success("✅ OpenAI API Key loaded.")
 
 # Database/Categories Status
 if st.session_state.categories_loaded:
@@ -69,15 +47,12 @@ else:
     st.sidebar.error("❌ No Categories found in Database. Classification may not work.")
     st.sidebar.markdown("Ensure `app_database.db` is present and populated.")
 
-# Download Transaction Template
+# Download Template
 st.sidebar.subheader("Transaction Template")
 template_file_name = "transaction_template.csv"
-# Initial assumption: template is in the same directory as app.py
 current_dir_template_path = template_file_name 
-# Alternative common path in the sandbox home
 home_dir_template_path = os.path.join("/home/ubuntu", template_file_name)
 
-# Determine the correct path for template_path
 actual_template_path_to_use = None
 if os.path.exists(current_dir_template_path):
     actual_template_path_to_use = current_dir_template_path
@@ -93,20 +68,17 @@ if actual_template_path_to_use:
             mime="text/csv"
         )
 else:
-    st.sidebar.error(f"✗ Template file ({template_file_name}) not found in expected locations.")
+    st.sidebar.error(f"✗ Template file ({template_file_name}) not found.")
 
 # --- Main Application Area ---
 st.title("🤖 AI Transaction Classifier")
 st.markdown("Upload your transactions, classify them with AI, correct as needed, and download the results.")
 
-# Upload Transactions CSV
 st.header("1. Upload and Process Transactions")
 transactions_file = st.file_uploader("Upload your Transactions CSV file", type=["csv"], key="transactions_uploader")
 
 if transactions_file is not None:
-    if not st.session_state.api_key_set:
-        st.error("Error: Gemini API Key not configured. Check Streamlit Cloud Secrets.")
-    elif not st.session_state.categories_loaded:
+    if not st.session_state.categories_loaded:
         st.error("Error: No categories loaded in the database. The application cannot classify.")
     else:
         try:
@@ -115,7 +87,7 @@ if transactions_file is not None:
             
             description_column = "ExpenseDesc"
             if description_column not in df.columns:
-                st.error(f"The transactions CSV file must contain the column: 	{description_column}")
+                st.error(f"The transactions CSV file must contain the column: {description_column}")
                 st.session_state.transactions_df = None
             else:
                 progress_bar = st.progress(0)
@@ -125,8 +97,8 @@ if transactions_file is not None:
 
                 for i, row in df.iterrows():
                     desc = str(row[description_column]) if pd.notna(row[description_column]) else ""
-                    status_text.text(f"Processing transaction {i+1}/{total_rows}: 	{desc[:50]}...")
-                    assigned_category = classification_engine.get_category_for_transaction(desc, st.session_state.google_api_key)
+                    status_text.text(f"Processing transaction {i+1}/{total_rows}: {desc[:50]}...")
+                    assigned_category = classification_engine.get_category_for_transaction(desc)
                     classified_categories.append(assigned_category)
                     progress_bar.progress((i + 1) / total_rows)
                 
@@ -165,7 +137,6 @@ if st.session_state.edited_transactions_df is not None:
 
     editor_key = "data_editor_no_file"
     if transactions_file:
-        # Use a combination of name and size as a more robust key if file_id is not always available
         editor_key = f"data_editor_{transactions_file.name}_{transactions_file.size}"
 
     edited_df = st.data_editor(
@@ -197,7 +168,7 @@ if st.session_state.edited_transactions_df is not None:
                     if database_utils.save_correction(current_description, main_cat_corrected, sub_cat_corrected):
                         changes_detected_count +=1
                     else:
-                        st.warning(f"Could not save correction for: 	{current_description[:30]}...")
+                        st.warning(f"Could not save correction for: {current_description[:30]}...")
         
         if changes_detected_count > 0:
             st.toast(f"{changes_detected_count} corrections saved and learned!", icon="🧠")
@@ -215,4 +186,3 @@ if st.session_state.edited_transactions_df is not None:
 
 st.sidebar.markdown("------")
 st.sidebar.info("Developed by BSH")
-
