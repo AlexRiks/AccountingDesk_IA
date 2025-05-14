@@ -1,6 +1,7 @@
 import openai
-import os
-openai.api_key = os.getenv("OPENAI_API_KEY")
+import streamlit as st
+
+openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 def classify_transaction_with_ai(prompt):
     try:
